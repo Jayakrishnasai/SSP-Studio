@@ -1,4 +1,3 @@
-'use client'
 import { useEffect } from 'react'
 import Lenis from 'lenis'
 import '../styles/globals.css'
