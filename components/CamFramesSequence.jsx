@@ -52,10 +52,10 @@ export default function CamFramesSequence() {
       : window.innerWidth < 1200
         ? '/CamFramesWebP/tablet'
         : '/CamFramesWebP/desktop'
-    const preloadCount = isMobile ? 10 : 24
-    const preloadRadius = isMobile ? 20 : 45
+    const preloadCount = isMobile ? 14 : 28
+    const preloadRadius = isMobile ? 28 : 60
     const evictionPadding = preloadRadius * 2
-    const mobileFrameStep = isMobile ? 2 : 1
+    const mobileFrameStep = 1
     const timelineFrameCount = Math.ceil(frameCount / mobileFrameStep)
 
     const currentFrame = index => `${frameFolder}/frame_${String(index).padStart(3, '0')}.webp`
@@ -118,8 +118,11 @@ export default function CamFramesSequence() {
       }
 
       function preloadAround(index) {
-        const start = Math.max(0, index - preloadRadius)
-        const end = Math.min(frameCount - 1, index + preloadRadius)
+        const renderedFrame = renderState.renderedFrame >= 0 ? renderState.renderedFrame : index
+        const bridgeStart = Math.min(index, renderedFrame)
+        const bridgeEnd = Math.max(index, renderedFrame)
+        const start = Math.max(0, bridgeStart - preloadRadius)
+        const end = Math.min(frameCount - 1, bridgeEnd + preloadRadius)
         const direction = index >= renderState.renderedFrame ? 1 : -1
 
         loadFrame(index, false, 'high')
@@ -137,12 +140,28 @@ export default function CamFramesSequence() {
           }
         }
 
+        preloadBridgeFrames(renderedFrame, index, direction)
+
         for (const cachedIndex of decodedImages.keys()) {
           if (cachedIndex < start - evictionPadding || cachedIndex > end + evictionPadding) {
             decodedImages.delete(cachedIndex)
             imagePromises.delete(`webp-${cachedIndex}`)
             imagePromises.delete(`png-${cachedIndex}`)
           }
+        }
+      }
+
+      function preloadBridgeFrames(fromFrame, toFrame, direction) {
+        if (fromFrame === toFrame) return
+
+        const bridgeLimit = isMobile ? 18 : 28
+        const start = fromFrame + direction
+        const end = direction > 0
+          ? Math.min(toFrame, fromFrame + bridgeLimit)
+          : Math.max(toFrame, fromFrame - bridgeLimit)
+
+        for (let frame = start; direction > 0 ? frame <= end : frame >= end; frame += direction) {
+          loadFrame(frame, false, 'high')
         }
       }
 
@@ -155,36 +174,68 @@ export default function CamFramesSequence() {
 
         if (renderState.rafId) return
 
-        renderState.rafId = requestAnimationFrame(() => {
-          renderState.rafId = null
+        renderState.rafId = requestAnimationFrame(advanceRender)
+      }
 
-          if (!renderState.active || renderState.renderedFrame === renderState.requestedFrame) {
-            return
-          }
+      function advanceRender() {
+        renderState.rafId = null
 
-          renderFrame(renderState.requestedFrame)
-        })
+        if (!renderState.active || renderState.renderedFrame === renderState.requestedFrame) {
+          return
+        }
+
+        const didDrawFrame = renderFrame(getNextDisplayFrame())
+
+        if (didDrawFrame && renderState.active && renderState.renderedFrame !== renderState.requestedFrame) {
+          renderState.rafId = requestAnimationFrame(advanceRender)
+        }
+      }
+
+      function getNextDisplayFrame() {
+        if (renderState.renderedFrame < 0) {
+          return 0
+        }
+
+        const direction = renderState.requestedFrame > renderState.renderedFrame ? 1 : -1
+        return renderState.renderedFrame + direction
       }
 
       function renderFrame(index) {
         const img = decodedImages.get(index)
 
         if (!img) {
-          const nearestFrame = getNearestDecodedFrame(index)
-
-          if (nearestFrame !== null && nearestFrame !== renderState.renderedFrame) {
-            drawFrame(nearestFrame, decodedImages.get(nearestFrame))
-          }
+          const direction = renderState.requestedFrame >= renderState.renderedFrame ? 1 : -1
+          preloadBridgeFrames(
+            renderState.renderedFrame >= 0 ? renderState.renderedFrame : index,
+            renderState.requestedFrame,
+            direction
+          )
 
           loadFrame(index, false, 'high').then(loadedImage => {
-            if (loadedImage && renderState.active && renderState.requestedFrame === index) {
-              requestRender(index)
+            if (!loadedImage || !renderState.active) return
+
+            const isStillNeeded = renderState.renderedFrame < renderState.requestedFrame
+              ? index > renderState.renderedFrame && index <= renderState.requestedFrame
+              : index < renderState.renderedFrame && index >= renderState.requestedFrame
+
+            if (isStillNeeded) {
+              requestRender(renderState.requestedFrame)
             }
           })
-          return
+
+          if (renderState.renderedFrame < 0) {
+            const nearestFrame = getNearestDecodedFrame(index)
+
+            if (nearestFrame !== null) {
+              drawFrame(nearestFrame, decodedImages.get(nearestFrame))
+            }
+          }
+
+          return false
         }
 
         drawFrame(index, img)
+        return true
       }
 
       function getNearestDecodedFrame(index) {
