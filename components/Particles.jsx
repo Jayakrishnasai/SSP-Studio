@@ -1,10 +1,15 @@
 'use client'
 import { useEffect, useRef } from 'react'
+import useDevicePerformance from '../lib/hooks/useDevicePerformance'
+import { debounce } from '../lib/utils'
 
 export default function Particles() {
   const canvasRef = useRef(null)
+  const { particleCount, particleLineDistance, disableParticles } = useDevicePerformance()
 
   useEffect(() => {
+    if (disableParticles) return
+
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -18,21 +23,26 @@ export default function Particles() {
     }
 
     const createParticles = () => {
-      const count = Math.min(Math.floor((canvas.width * canvas.height) / 12000), 80)
+      const count = Math.min(
+        Math.floor((canvas.width * canvas.height) / 18000),
+        particleCount
+      )
       particles = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 2 + 0.5,
-        speedX: (Math.random() - 0.5) * 0.3,
-        speedY: (Math.random() - 0.5) * 0.3,
-        opacity: Math.random() * 0.5 + 0.1,
+        size: Math.random() * 1.5 + 0.5,
+        speedX: (Math.random() - 0.5) * 0.2,
+        speedY: (Math.random() - 0.5) * 0.2,
+        opacity: Math.random() * 0.4 + 0.1,
       }))
     }
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      particles.forEach((p) => {
+      const len = particles.length
+      for (let i = 0; i < len; i++) {
+        const p = particles[i]
         p.x += p.speedX
         p.y += p.speedY
 
@@ -45,22 +55,27 @@ export default function Particles() {
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(200, 168, 110, ${p.opacity})`
         ctx.fill()
-      })
+      }
 
-      particles.forEach((a) => {
-        particles.forEach((b) => {
-          const dx = a.x - b.x
-          const dy = a.y - b.y
-          const dist = Math.sqrt(dx * dx + dy * dy)
-          if (dist < 120) {
-            ctx.beginPath()
-            ctx.moveTo(a.x, a.y)
-            ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(200, 168, 110, ${0.06 * (1 - dist / 120)})`
-            ctx.stroke()
+      if (particleLineDistance > 0) {
+        for (let i = 0; i < len; i++) {
+          const a = particles[i]
+          for (let j = i + 1; j < len; j++) {
+            const b = particles[j]
+            const dx = a.x - b.x
+            const dy = a.y - b.y
+            const distSq = dx * dx + dy * dy
+            if (distSq < particleLineDistance * particleLineDistance) {
+              const dist = Math.sqrt(distSq)
+              ctx.beginPath()
+              ctx.moveTo(a.x, a.y)
+              ctx.lineTo(b.x, b.y)
+              ctx.strokeStyle = `rgba(200, 168, 110, ${0.05 * (1 - dist / particleLineDistance)})`
+              ctx.stroke()
+            }
           }
-        })
-      })
+        }
+      }
 
       animationId = requestAnimationFrame(animate)
     }
@@ -69,16 +84,21 @@ export default function Particles() {
     createParticles()
     animate()
 
-    window.addEventListener('resize', () => {
+    const debouncedResize = debounce(() => {
       resize()
       createParticles()
-    })
+    }, 250)
+
+    window.addEventListener('resize', debouncedResize, { passive: true })
 
     return () => {
       cancelAnimationFrame(animationId)
-      window.removeEventListener('resize', resize)
+      window.removeEventListener('resize', debouncedResize)
+      particles = []
     }
-  }, [])
+  }, [particleCount, particleLineDistance, disableParticles])
+
+  if (disableParticles) return null
 
   return (
     <canvas

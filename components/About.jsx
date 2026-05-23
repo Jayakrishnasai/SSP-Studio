@@ -1,5 +1,5 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, memo } from 'react'
 import { motion, useInView } from 'framer-motion'
 import AnimatedCounter from './AnimatedCounter'
 
@@ -9,7 +9,7 @@ const stats = [
   { label: 'Years Experience', end: 12, suffix: '' },
 ]
 
-export default function About() {
+const About = memo(function About() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -41,9 +41,9 @@ export default function About() {
           >
             <div className="relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl relative">
-                <img 
-                  src="/images/about_image.png" 
-                  alt="SSP Studio Setup" 
+                <img
+                  src="/images/about_image.png"
+                  alt="SSP Studio Setup"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ssp-darker/80 to-transparent" />
@@ -73,7 +73,7 @@ export default function About() {
 
             <p className="text-ssp-gray leading-relaxed mb-6">
               At SSP Studio, we believe every frame tells a story. Founded by a
-              team of passionate filmmakers and photographers, we've spent over a
+              team of passionate filmmakers and photographers, we have spent over a
               decade perfecting the art of visual storytelling — from intimate
               portraits to large-scale commercial productions.
             </p>
@@ -113,4 +113,6 @@ export default function About() {
       </div>
     </section>
   )
-}
+})
+
+export default About

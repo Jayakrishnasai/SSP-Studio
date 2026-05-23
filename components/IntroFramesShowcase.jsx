@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, memo } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { sampleFrames } from '../lib/utils'
 
 const frames = sampleFrames(12)
 
-export default function IntroFramesShowcase() {
+const IntroFramesShowcase = memo(function IntroFramesShowcase() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -20,16 +20,13 @@ export default function IntroFramesShowcase() {
     <section ref={ref} className="relative h-[200vh] w-full overflow-hidden bg-ssp-darker">
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         <motion.div
-          style={{ scale: zoom, opacity }}
+          style={{ scale: zoom, opacity, willChange: 'transform' }}
           className="absolute inset-0"
         >
           <div className="relative w-full h-full">
             {frames.map((src, i) => {
               const xOffset = (i % 4 - 1.5) * 22
               const yOffset = Math.floor(i / 4) * 20 - 20
-              const rotateX = (i % 4 - 1.5) * 4
-              const rotateY = Math.floor(i / 4) * 3 - 3
-              const zIndex = i
 
               return (
                 <motion.div
@@ -40,8 +37,8 @@ export default function IntroFramesShowcase() {
                     top: '50%',
                     width: `${28 + (i % 3) * 6}%`,
                     maxWidth: 420,
-                    transform: `translate(-50%, -50%) translate(${xOffset}%, ${yOffset}%) perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-                    zIndex,
+                    transform: `translate(-50%, -50%) translate(${xOffset}%, ${yOffset}%)`,
+                    zIndex: i,
                   }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: [0, 1, 1, 0] }}
@@ -60,9 +57,7 @@ export default function IntroFramesShowcase() {
                     src={src}
                     alt=""
                     className="w-full h-auto rounded-lg shadow-2xl shadow-ssp-accent/10"
-                    style={{
-                      filter: `brightness(${0.7 + (i % 3) * 0.15}) contrast(1.1)`,
-                    }}
+                    style={{ filter: `brightness(${0.7 + (i % 3) * 0.15}) contrast(1.1)` }}
                   />
                 </motion.div>
               )
@@ -70,10 +65,7 @@ export default function IntroFramesShowcase() {
           </div>
         </motion.div>
 
-        <motion.div
-          style={{ y: textY }}
-          className="relative z-20 text-center px-6"
-        >
+        <motion.div style={{ y: textY, willChange: 'transform' }} className="relative z-20 text-center px-6">
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -107,4 +99,6 @@ export default function IntroFramesShowcase() {
       </div>
     </section>
   )
-}
+})
+
+export default IntroFramesShowcase

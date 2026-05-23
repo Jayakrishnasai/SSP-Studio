@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, memo } from 'react'
 import { motion } from 'framer-motion'
 
 const stagger = {
@@ -22,7 +22,17 @@ const fadeUp = {
   },
 }
 
-export default function Hero() {
+const scrollIndicator = {
+  animate: { y: [0, 8, 0] },
+  transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+}
+
+const dotAnimation = {
+  animate: { y: [0, 6, 0] },
+  transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+}
+
+const Hero = memo(function Hero() {
   const videoRef = useRef(null)
 
   useEffect(() => {
@@ -122,9 +132,9 @@ export default function Hero() {
             transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="hidden lg:block absolute right-6 lg:right-12 top-1/2 -translate-y-1/2 w-[350px] xl:w-[450px]"
           >
-            <img 
-              src="/images/Image-1.png" 
-              alt="Creative Showcase" 
+            <img
+              src="/images/Image-1.png"
+              alt="Creative Showcase"
               className="w-full h-auto rounded-2xl shadow-2xl shadow-black border border-ssp-white/10"
             />
           </motion.div>
@@ -137,8 +147,7 @@ export default function Hero() {
           className="absolute bottom-10 left-1/2 -translate-x-1/2"
         >
           <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            {...scrollIndicator}
             className="flex flex-col items-center gap-2 text-ssp-gray text-xs tracking-[0.2em] uppercase"
           >
             <span>Scroll</span>
@@ -147,8 +156,7 @@ export default function Hero() {
               <motion.circle
                 cx="8" cy="8" r="2"
                 fill="currentColor"
-                animate={{ y: [0, 6, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                {...dotAnimation}
               />
             </svg>
           </motion.div>
@@ -156,4 +164,6 @@ export default function Hero() {
       </div>
     </section>
   )
-}
+})
+
+export default Hero

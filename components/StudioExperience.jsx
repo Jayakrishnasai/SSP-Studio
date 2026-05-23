@@ -1,26 +1,17 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, memo } from 'react'
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
 import { sampleFrames } from '../lib/utils'
 
 const frames = sampleFrames(5)
 
 const phases = [
-  {
-    title: 'The Art of Light',
-    desc: 'Every frame is sculpted with precision — where natural light meets cinematic mastery.',
-  },
-  {
-    title: 'Motion & Emotion',
-    desc: 'We capture not just movement, but the feeling behind every gesture and glance.',
-  },
-  {
-    title: 'Color & Mood',
-    desc: 'Rich palettes and tonal contrast combine to create visual poetry in every frame.',
-  },
+  { title: 'The Art of Light', desc: 'Every frame is sculpted with precision — where natural light meets cinematic mastery.' },
+  { title: 'Motion & Emotion', desc: 'We capture not just movement, but the feeling behind every gesture and glance.' },
+  { title: 'Color & Mood', desc: 'Rich palettes and tonal contrast combine to create visual poetry in every frame.' },
 ]
 
-function ExperienceFrame({ src, index, total, progress, blur }) {
+const ExperienceFrame = memo(function ExperienceFrame({ src, index, total, progress }) {
   const inputRange = [
     Math.max(0, (index - 0.6) / total),
     index / total,
@@ -30,7 +21,7 @@ function ExperienceFrame({ src, index, total, progress, blur }) {
   const scale = useTransform(progress, inputRange, [1.1, 1, 1.1])
 
   return (
-    <motion.div className="absolute inset-0" style={{ opacity, scale }}>
+    <motion.div className="absolute inset-0" style={{ opacity, scale, willChange: 'transform' }}>
       <img
         src={src}
         alt=""
@@ -39,9 +30,9 @@ function ExperienceFrame({ src, index, total, progress, blur }) {
       />
     </motion.div>
   )
-}
+})
 
-function ExperiencePhase({ title, desc, index, total, progress }) {
+const ExperiencePhase = memo(function ExperiencePhase({ title, desc, index, total, progress }) {
   const inputRange = [
     Math.max(0, (index + 0.5) / total - 0.2),
     Math.min(1, (index + 0.5) / total + 0.2),
@@ -50,18 +41,16 @@ function ExperiencePhase({ title, desc, index, total, progress }) {
   const x = useTransform(progress, inputRange, [40, 0])
 
   return (
-    <motion.div className="relative pl-8 border-l border-white/10" style={{ opacity, x }}>
+    <motion.div className="relative pl-8 border-l border-white/10" style={{ opacity, x, willChange: 'transform' }}>
       <div className="absolute left-0 top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-ssp-accent shadow-lg shadow-ssp-accent/50" />
-      <p className="text-ssp-accent text-sm tracking-[0.15em] mb-2">
-        ˚ {String(index + 1).padStart(2, '0')}
-      </p>
+      <p className="text-ssp-accent text-sm tracking-[0.15em] mb-2">˚ {String(index + 1).padStart(2, '0')}</p>
       <h3 className="text-xl md:text-2xl font-bold text-ssp-white mb-2">{title}</h3>
       <p className="text-ssp-gray leading-relaxed">{desc}</p>
     </motion.div>
   )
-}
+})
 
-export default function StudioExperience() {
+const StudioExperience = memo(function StudioExperience() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -81,7 +70,7 @@ export default function StudioExperience() {
       <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
         <motion.div
           className="absolute inset-0"
-          style={{ filter: useTransform(blurAmount, (v) => `blur(${v}px)`) }}
+          style={{ filter: useTransform(blurAmount, (v) => `blur(${v}px)`), willChange: 'filter' }}
         >
           {frames.map((src, i) => (
             <ExperienceFrame
@@ -90,7 +79,6 @@ export default function StudioExperience() {
               index={i}
               total={frames.length}
               progress={smoothProgress}
-              blur={blurAmount}
             />
           ))}
           <div className="absolute inset-0 bg-gradient-to-r from-ssp-darker/60 via-transparent to-ssp-darker/60" />
@@ -103,18 +91,16 @@ export default function StudioExperience() {
               style={{
                 opacity: useTransform(smoothProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0]),
                 x: useTransform(smoothProgress, [0, 0.15], [40, 0]),
+                willChange: 'transform',
               }}
             >
-              <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm mb-4">
-                Studio Experience
-              </p>
+              <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm mb-4">Studio Experience</p>
               <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
                 Where Vision Becomes{' '}
                 <span className="text-gradient">Reality</span>
               </h2>
               <p className="text-ssp-gray leading-relaxed text-lg">
-                Step into our world. Every frame is a testament to our
-                relentless pursuit of perfection.
+                Step into our world. Every frame is a testament to our relentless pursuit of perfection.
               </p>
             </motion.div>
 
@@ -135,4 +121,6 @@ export default function StudioExperience() {
       </div>
     </section>
   )
-}
+})
+
+export default StudioExperience

@@ -1,8 +1,8 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export default function LoadingScreen() {
+const LoadingScreen = memo(function LoadingScreen() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -53,4 +53,6 @@ export default function LoadingScreen() {
       )}
     </AnimatePresence>
   )
-}
+})
+
+export default LoadingScreen

@@ -1,42 +1,18 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, memo } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { HiCamera, HiFilm, HiBriefcase, HiHeart, HiPhotograph, HiLocationMarker } from 'react-icons/hi'
 
 const services = [
-  {
-    icon: HiCamera,
-    title: 'Photography',
-    description: 'Editorial, portrait, and fine art photography with cinematic lighting and composition.',
-  },
-  {
-    icon: HiFilm,
-    title: 'Videography',
-    description: 'Cinematic video production from concept to final cut, including color grading.',
-  },
-  {
-    icon: HiBriefcase,
-    title: 'Commercial Shoots',
-    description: 'Brand campaigns, product photography, and corporate visual content.',
-  },
-  {
-    icon: HiHeart,
-    title: 'Wedding Shoots',
-    description: 'Elegant wedding cinematography and photography that tells your unique love story.',
-  },
-  {
-    icon: HiPhotograph,
-    title: 'Product Photography',
-    description: 'High-end product imagery for e-commerce, catalogs, and advertising.',
-  },
-  {
-    icon: HiLocationMarker,
-    title: 'Drone Cinematography',
-    description: 'Aerial footage and photography with professional-grade drone equipment.',
-  },
+  { icon: HiCamera, title: 'Photography', description: 'Editorial, portrait, and fine art photography with cinematic lighting and composition.' },
+  { icon: HiFilm, title: 'Videography', description: 'Cinematic video production from concept to final cut, including color grading.' },
+  { icon: HiBriefcase, title: 'Commercial Shoots', description: 'Brand campaigns, product photography, and corporate visual content.' },
+  { icon: HiHeart, title: 'Wedding Shoots', description: 'Elegant wedding cinematography and photography that tells your unique love story.' },
+  { icon: HiPhotograph, title: 'Product Photography', description: 'High-end product imagery for e-commerce, catalogs, and advertising.' },
+  { icon: HiLocationMarker, title: 'Drone Cinematography', description: 'Aerial footage and photography with professional-grade drone equipment.' },
 ]
 
-const container = {
+const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -44,7 +20,7 @@ const container = {
   },
 }
 
-const item = {
+const itemVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
@@ -53,7 +29,31 @@ const item = {
   },
 }
 
-export default function Services() {
+const ServiceCard = memo(function ServiceCard({ service }) {
+  const Icon = service.icon
+  return (
+    <motion.div
+      variants={itemVariants}
+      whileHover={{ y: -8 }}
+      className="group relative p-8 glass rounded-2xl glass-hover cursor-default transition-all duration-500"
+    >
+      <div className="relative z-10">
+        <div className="w-14 h-14 rounded-xl bg-ssp-accent/10 flex items-center justify-center mb-6 group-hover:bg-ssp-accent/20 transition-colors duration-500">
+          <Icon className="text-2xl text-ssp-accent" />
+        </div>
+        <h3 className="text-xl font-bold mb-3 text-ssp-white group-hover:text-ssp-accent transition-colors duration-500">
+          {service.title}
+        </h3>
+        <p className="text-ssp-gray text-sm leading-relaxed">
+          {service.description}
+        </p>
+      </div>
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-ssp-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    </motion.div>
+  )
+})
+
+const Services = memo(function Services() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -78,37 +78,18 @@ export default function Services() {
         </motion.div>
 
         <motion.div
-          variants={container}
+          variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {services.map((service) => (
-            <motion.div
-              key={service.title}
-              variants={item}
-              whileHover={{ y: -8 }}
-              className="group relative p-8 glass rounded-2xl glass-hover cursor-default transition-all duration-500"
-            >
-              <div className="relative z-10">
-                <div className="w-14 h-14 rounded-xl bg-ssp-accent/10 flex items-center justify-center mb-6 group-hover:bg-ssp-accent/20 transition-colors duration-500">
-                  <service.icon className="text-2xl text-ssp-accent" />
-                </div>
-
-                <h3 className="text-xl font-bold mb-3 text-ssp-white group-hover:text-ssp-accent transition-colors duration-500">
-                  {service.title}
-                </h3>
-
-                <p className="text-ssp-gray text-sm leading-relaxed">
-                  {service.description}
-                </p>
-              </div>
-
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-ssp-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </motion.div>
+            <ServiceCard key={service.title} service={service} />
           ))}
         </motion.div>
       </div>
     </section>
   )
-}
+})
+
+export default Services

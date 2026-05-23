@@ -1,30 +1,18 @@
 'use client'
-import { useRef } from 'react'
+import { useRef, memo } from 'react'
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
 import { sampleFrames } from '../lib/utils'
 
 const frames = sampleFrames(8)
 
 const steps = [
-  {
-    label: 'Concept',
-    desc: 'Every great frame begins with a vision. We craft narratives that resonate.',
-  },
-  {
-    label: 'Capture',
-    desc: 'Precision meets artistry. Each shot is meticulously composed and lit.',
-  },
-  {
-    label: 'Process',
-    desc: 'Raw footage transforms through expert color grading and post-production.',
-  },
-  {
-    label: 'Deliver',
-    desc: 'The final cut — a cinematic masterpiece ready for the world to see.',
-  },
+  { label: 'Concept', desc: 'Every great frame begins with a vision. We craft narratives that resonate.' },
+  { label: 'Capture', desc: 'Precision meets artistry. Each shot is meticulously composed and lit.' },
+  { label: 'Process', desc: 'Raw footage transforms through expert color grading and post-production.' },
+  { label: 'Deliver', desc: 'The final cut — a cinematic masterpiece ready for the world to see.' },
 ]
 
-function TimelineFrame({ src, index, total, progress }) {
+const TimelineFrame = memo(function TimelineFrame({ src, index, total, progress }) {
   const inputRange = [
     Math.max(0, (index - 0.5) / total),
     index / total,
@@ -48,9 +36,9 @@ function TimelineFrame({ src, index, total, progress }) {
       <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
     </motion.div>
   )
-}
+})
 
-function TimelineStep({ label, desc, index, total, progress }) {
+const TimelineStep = memo(function TimelineStep({ label, desc, index, total, progress }) {
   const inputRange = [
     Math.max(0, (index - 0.25) / total),
     Math.min(1, (index + 0.25) / total),
@@ -61,16 +49,14 @@ function TimelineStep({ label, desc, index, total, progress }) {
   return (
     <motion.div className="relative pl-8 border-l border-white/10" style={{ opacity, x }}>
       <div className="absolute left-0 top-1 -translate-x-1/2 w-3 h-3 rounded-full bg-ssp-accent shadow-lg shadow-ssp-accent/50" />
-      <p className="text-ssp-accent text-sm tracking-[0.2em] uppercase mb-2">
-        0{index + 1}
-      </p>
+      <p className="text-ssp-accent text-sm tracking-[0.2em] uppercase mb-2">0{index + 1}</p>
       <h3 className="text-xl md:text-2xl font-bold text-ssp-white mb-2">{label}</h3>
       <p className="text-ssp-gray leading-relaxed">{desc}</p>
     </motion.div>
   )
-}
+})
 
-export default function CameraTimeline() {
+const CameraTimeline = memo(function CameraTimeline() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -121,4 +107,6 @@ export default function CameraTimeline() {
       </div>
     </section>
   )
-}
+})
+
+export default CameraTimeline
