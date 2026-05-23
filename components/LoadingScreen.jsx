@@ -11,6 +11,11 @@ const LoadingScreen = memo(function LoadingScreen() {
   const timerRef = useRef(null)
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.__SSP_FRAMES_READY) {
+      setIsLoading(false)
+      return
+    }
+
     let minPassed = false
 
     const minTimer = setTimeout(() => {

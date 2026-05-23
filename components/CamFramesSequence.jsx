@@ -19,6 +19,7 @@ function getCanvasScale() {
 
 function signalFramesReady() {
   if (typeof window !== 'undefined') {
+    window.__SSP_FRAMES_READY = true
     window.dispatchEvent(new CustomEvent('ssp:framesReady'))
   }
 }

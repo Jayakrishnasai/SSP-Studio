@@ -50,7 +50,6 @@ const Hero = memo(function Hero() {
           muted
           loop
           playsInline
-          poster="/images/hero-poster.jpg"
           className="w-full h-full object-cover scale-110"
         >
           <source

@@ -11,29 +11,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['framer-motion', 'gsap', 'react-icons'],
   },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  headers: async () => [
-    {
-      source: '/:path*',
-      headers: [
-        {
-          key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
-        },
-      ],
-    },
-    {
-      source: '/images/:path*',
-      headers: [
-        {
-          key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
-        },
-      ],
-    },
-  ],
 }
 
 module.exports = nextConfig
