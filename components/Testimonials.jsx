@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 
 const testimonials = [
@@ -40,85 +40,30 @@ const testimonials = [
   },
 ]
 
-function TestimonialCard({ testimonial, direction }) {
-  return (
-    <motion.div
-      custom={direction}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="glass rounded-3xl p-8 md:p-12 text-center"
-    >
-      <div className={`w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br ${testimonial.color} flex items-center justify-center`}>
-        <span className="text-lg font-bold text-ssp-white">
-          {testimonial.avatar}
-        </span>
-      </div>
-
-      <p className="text-lg md:text-xl text-ssp-gray-light leading-relaxed mb-8 italic">
-        &ldquo;{testimonial.content}&rdquo;
-      </p>
-
-      <div>
-        <p className="text-ssp-white font-semibold">
-          {testimonial.name}
-        </p>
-        <p className="text-ssp-gray text-sm mt-1">
-          {testimonial.role}
-        </p>
-      </div>
-    </motion.div>
-  )
-}
-
-const variants = {
-  enter: (dir) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir) => ({ x: dir > 0 ? -300 : 300, opacity: 0 }),
-}
-
 export default function Testimonials() {
   const [current, setCurrent] = useState(0)
   const [direction, setDirection] = useState(1)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
-  const timerRef = useRef(null)
-  const intervalRef = useRef(5000)
-  const currentRef = useRef(0)
 
   useEffect(() => {
-    currentRef.current = current
-  }, [current])
-
-  useEffect(() => {
-    if (!isInView) return
-
-    let startTime = performance.now()
-    let rafId
-
-    function tick(timestamp) {
-      const elapsed = timestamp - startTime
-      if (elapsed >= intervalRef.current) {
-        setDirection(1)
-        setCurrent((prev) => (prev + 1) % testimonials.length)
-        startTime = timestamp
-      }
-      rafId = requestAnimationFrame(tick)
-    }
-
-    rafId = requestAnimationFrame(tick)
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [isInView])
-
-  const goTo = useCallback((index) => {
-    setDirection(index > currentRef.current ? 1 : -1)
-    setCurrent(index)
-    currentRef.current = index
+    const timer = setInterval(() => {
+      setDirection(1)
+      setCurrent((prev) => (prev + 1) % testimonials.length)
+    }, 5000)
+    return () => clearInterval(timer)
   }, [])
+
+  const goTo = (index) => {
+    setDirection(index > current ? 1 : -1)
+    setCurrent(index)
+  }
+
+  const variants = {
+    enter: (dir) => ({ x: dir > 0 ? 300 : -300, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir) => ({ x: dir > 0 ? -300 : 300, opacity: 0 }),
+  }
 
   return (
     <section id="testimonials" className="relative py-32 lg:py-44">
@@ -148,11 +93,35 @@ export default function Testimonials() {
         >
           <div className="relative overflow-hidden" style={{ minHeight: 280 }}>
             <AnimatePresence mode="wait" custom={direction}>
-              <TestimonialCard
+              <motion.div
                 key={current}
-                testimonial={testimonials[current]}
-                direction={direction}
-              />
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="glass rounded-3xl p-8 md:p-12 text-center"
+              >
+                <div className={`w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br ${testimonials[current].color} flex items-center justify-center`}>
+                  <span className="text-lg font-bold text-ssp-white">
+                    {testimonials[current].avatar}
+                  </span>
+                </div>
+
+                <p className="text-lg md:text-xl text-ssp-gray-light leading-relaxed mb-8 italic">
+                  &ldquo;{testimonials[current].content}&rdquo;
+                </p>
+
+                <div>
+                  <p className="text-ssp-white font-semibold">
+                    {testimonials[current].name}
+                  </p>
+                  <p className="text-ssp-gray text-sm mt-1">
+                    {testimonials[current].role}
+                  </p>
+                </div>
+              </motion.div>
             </AnimatePresence>
           </div>
 

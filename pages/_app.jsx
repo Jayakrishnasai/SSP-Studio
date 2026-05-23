@@ -1,30 +1,19 @@
-import { useEffect, useRef } from 'react'
-import dynamic from 'next/dynamic'
+import { useEffect } from 'react'
 import Lenis from 'lenis'
 import '../styles/globals.css'
+import LoadingScreen from '../components/LoadingScreen'
 import Navbar from '../components/Navbar'
-
-const LoadingScreen = dynamic(() => import('../components/LoadingScreen'), { ssr: false })
-const ScrollProgress = dynamic(() => import('../components/ScrollProgress'), { ssr: false })
-const Particles = dynamic(() => import('../components/Particles'), {
-  ssr: false,
-  loading: () => null,
-})
+import ScrollProgress from '../components/ScrollProgress'
+import Particles from '../components/Particles'
 
 export default function App({ Component, pageProps }) {
-  const lenisRef = useRef(null)
-
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.8,
-      touchMultiplier: 1.2,
     })
-
-    lenisRef.current = lenis
 
     function raf(time) {
       lenis.raf(time)

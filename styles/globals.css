@@ -10,56 +10,12 @@
   --color-ssp-gray: #888888;
   --color-ssp-gray-light: #aaaaaa;
   --color-ssp-white: #f5f5f5;
-
   --font-sans: 'Inter', 'Helvetica Neue', 'Arial', sans-serif;
   --font-display: 'Playfair Display', 'Georgia', serif;
-
-  --animate-fade-in: fadeIn 0.8s ease-out forwards;
-  --animate-slide-up: slideUp 0.8s ease-out forwards;
-  --animate-glow: glow 3s ease-in-out infinite alternate;
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-grain: grain 0.5s steps(4) infinite;
-
-  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes glow {
-  from { box-shadow: 0 0 20px rgba(200, 168, 110, 0.2); }
-  to { box-shadow: 0 0 40px rgba(200, 168, 110, 0.6); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
-
-@keyframes grain {
-  0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-5%, -5%); }
-  20% { transform: translate(-10%, 5%); }
-  30% { transform: translate(5%, -10%); }
-  40% { transform: translate(-5%, 15%); }
-  50% { transform: translate(-10%, 5%); }
-  60% { transform: translate(15%, 0); }
-  70% { transform: translate(0, 10%); }
-  80% { transform: translate(-15%, 0); }
-  90% { transform: translate(10%, 5%); }
 }
 
 @layer base {
-  *,
-  *::before,
-  *::after {
+  * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -92,20 +48,12 @@
     background: var(--color-ssp-accent);
     border-radius: 3px;
   }
-
-  img,
-  video,
-  canvas {
-    max-width: 100%;
-    height: auto;
-  }
 }
 
 @layer components {
   .glass {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
@@ -155,11 +103,16 @@
   .backface-hidden {
     backface-visibility: hidden;
   }
+}
 
-  .gpu-accelerated {
-    transform: translate3d(0, 0, 0);
-    will-change: transform;
-  }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
 }
 
 .lenis.lenis-smooth {

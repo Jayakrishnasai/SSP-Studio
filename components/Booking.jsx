@@ -1,76 +1,41 @@
 'use client'
-import { useState, useRef, useCallback, memo } from 'react'
+import { useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 
-const shootTypes = ['Photography', 'Videography', 'Commercial', 'Wedding', 'Product', 'Drone', 'Other']
+const shootTypes = [
+  'Photography',
+  'Videography',
+  'Commercial',
+  'Wedding',
+  'Product',
+  'Drone',
+  'Other',
+]
 
-const InputField = memo(function InputField({ label, name, type, value, placeholder, onChange, isInView, delay }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={isInView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.6, delay }}
-    >
-      <label className="block text-sm text-ssp-gray-light mb-2 tracking-[0.1em] uppercase">{label}</label>
-      {type === 'select' ? (
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          required
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300"
-        >
-          <option value="" disabled className="bg-ssp-darker">Select type</option>
-          {shootTypes.map((t) => (
-            <option key={t} value={t} className="bg-ssp-darker">{t}</option>
-          ))}
-        </select>
-      ) : type === 'textarea' ? (
-        <textarea
-          name={name}
-          value={value}
-          onChange={onChange}
-          required
-          rows={4}
-          placeholder={placeholder}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white placeholder-ssp-gray/50 focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300 resize-none"
-        />
-      ) : (
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          required
-          placeholder={placeholder}
-          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white placeholder-ssp-gray/50 focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300"
-        />
-      )}
-    </motion.div>
-  )
-})
-
-const Booking = memo(function Booking() {
+export default function Booking() {
   const [formData, setFormData] = useState({
-    name: '', email: '', shootType: '', date: '', message: '',
+    name: '',
+    email: '',
+    shootType: '',
+    date: '',
+    message: '',
   })
   const [submitted, setSubmitted] = useState(false)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
 
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }, [])
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
-  const handleSubmit = useCallback((e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     setSubmitted(true)
     setTimeout(() => {
       setSubmitted(false)
       setFormData({ name: '', email: '', shootType: '', date: '', message: '' })
     }, 3000)
-  }, [])
+  }
 
   return (
     <section id="booking" className="relative py-32 lg:py-44">
@@ -83,9 +48,12 @@ const Booking = memo(function Booking() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-16"
         >
-          <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm mb-4">Get in Touch</p>
+          <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm mb-4">
+            Get in Touch
+          </p>
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold">
-            Book Your <span className="text-gradient">Shoot</span>
+            Book Your{' '}
+            <span className="text-gradient">Shoot</span>
           </h2>
         </motion.div>
 
@@ -97,14 +65,107 @@ const Booking = memo(function Booking() {
         >
           <form onSubmit={handleSubmit} className="glass rounded-3xl p-8 md:p-12 space-y-6">
             <div className="grid sm:grid-cols-2 gap-6">
-              <InputField label="Name" name="name" type="text" value={formData.name} placeholder="Your name" onChange={handleChange} isInView={isInView} delay={0.3} />
-              <InputField label="Email" name="email" type="email" value={formData.email} placeholder="your@email.com" onChange={handleChange} isInView={isInView} delay={0.4} />
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <label className="block text-sm text-ssp-gray-light mb-2 tracking-[0.1em] uppercase">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Your name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white placeholder-ssp-gray/50 focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300"
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <label className="block text-sm text-ssp-gray-light mb-2 tracking-[0.1em] uppercase">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="your@email.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white placeholder-ssp-gray/50 focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300"
+                />
+              </motion.div>
             </div>
+
             <div className="grid sm:grid-cols-2 gap-6">
-              <InputField label="Shoot Type" name="shootType" type="select" value={formData.shootType} onChange={handleChange} isInView={isInView} delay={0.5} />
-              <InputField label="Preferred Date" name="date" type="date" value={formData.date} onChange={handleChange} isInView={isInView} delay={0.6} />
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                <label className="block text-sm text-ssp-gray-light mb-2 tracking-[0.1em] uppercase">
+                  Shoot Type
+                </label>
+                <select
+                  name="shootType"
+                  value={formData.shootType}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300"
+                >
+                  <option value="" disabled className="bg-ssp-darker">Select type</option>
+                  {shootTypes.map((type) => (
+                    <option key={type} value={type} className="bg-ssp-darker">
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <label className="block text-sm text-ssp-gray-light mb-2 tracking-[0.1em] uppercase">
+                  Preferred Date
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300 [color-scheme:dark]"
+                />
+              </motion.div>
             </div>
-            <InputField label="Message" name="message" type="textarea" value={formData.message} placeholder="Tell us about your project..." onChange={handleChange} isInView={isInView} delay={0.7} />
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              <label className="block text-sm text-ssp-gray-light mb-2 tracking-[0.1em] uppercase">
+                Message
+              </label>
+              <textarea
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                rows={4}
+                placeholder="Tell us about your project..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-ssp-white placeholder-ssp-gray/50 focus:outline-none focus:border-ssp-accent/50 focus:bg-white/10 transition-all duration-300 resize-none"
+              />
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -125,6 +186,4 @@ const Booking = memo(function Booking() {
       </div>
     </section>
   )
-})
-
-export default Booking
+}

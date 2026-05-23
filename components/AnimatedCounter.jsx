@@ -1,38 +1,29 @@
 'use client'
-import { useEffect, useRef, useState, memo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { useAnimationFrame } from '../lib/utils'
 
-const AnimatedCounter = memo(function AnimatedCounter({ end, suffix = '', duration = 2 }) {
+export default function AnimatedCounter({ end, suffix = '', duration = 2 }) {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const startTimeRef = useRef(null)
-  const startValueRef = useRef(0)
-
-  const callback = (delta) => {
-    if (!startTimeRef.current) {
-      startTimeRef.current = performance.now()
-      startValueRef.current = count
-    }
-    const elapsed = performance.now() - startTimeRef.current
-    const progress = Math.min(elapsed / (duration * 1000), 1)
-    const eased = 1 - Math.pow(1 - progress, 3)
-    const current = Math.round(startValueRef.current + (end - startValueRef.current) * eased)
-    setCount(current)
-    if (progress >= 1) {
-      setCount(end)
-    }
-  }
-
-  useAnimationFrame(callback, isInView)
 
   useEffect(() => {
-    if (!isInView) {
-      startTimeRef.current = null
-      setCount(0)
-    }
-  }, [isInView, end])
+    if (!isInView) return
+
+    let start = 0
+    const increment = end / (duration * 60)
+    const timer = setInterval(() => {
+      start += increment
+      if (start >= end) {
+        setCount(end)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(start))
+      }
+    }, 16)
+
+    return () => clearInterval(timer)
+  }, [isInView, end, duration])
 
   return (
     <motion.span
@@ -45,6 +36,4 @@ const AnimatedCounter = memo(function AnimatedCounter({ end, suffix = '', durati
       {count}{suffix}
     </motion.span>
   )
-})
-
-export default AnimatedCounter
+}

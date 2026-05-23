@@ -1,46 +1,13 @@
 'use client'
-import { useState, useEffect, useRef, memo } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const MIN_DISPLAY_MS = 800
-const MAX_DISPLAY_MS = 4000
-
-const LoadingScreen = memo(function LoadingScreen() {
+export default function LoadingScreen() {
   const [isLoading, setIsLoading] = useState(true)
-  const readyRef = useRef(false)
-  const timerRef = useRef(null)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.__SSP_FRAMES_READY) {
-      setIsLoading(false)
-      return
-    }
-
-    let minPassed = false
-
-    const minTimer = setTimeout(() => {
-      minPassed = true
-      if (readyRef.current) setIsLoading(false)
-    }, MIN_DISPLAY_MS)
-
-    const maxTimer = setTimeout(() => {
-      setIsLoading(false)
-    }, MAX_DISPLAY_MS)
-
-    const handleReady = () => {
-      readyRef.current = true
-      if (minPassed) setIsLoading(false)
-    }
-
-    window.addEventListener('ssp:framesReady', handleReady)
-
-    timerRef.current = { minTimer, maxTimer }
-
-    return () => {
-      clearTimeout(minTimer)
-      clearTimeout(maxTimer)
-      window.removeEventListener('ssp:framesReady', handleReady)
-    }
+    const timer = setTimeout(() => setIsLoading(false), 2500)
+    return () => clearTimeout(timer)
   }, [])
 
   return (
@@ -49,7 +16,7 @@ const LoadingScreen = memo(function LoadingScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-[100] bg-ssp-darker flex items-center justify-center"
         >
           <div className="text-center">
@@ -86,6 +53,4 @@ const LoadingScreen = memo(function LoadingScreen() {
       )}
     </AnimatePresence>
   )
-})
-
-export default LoadingScreen
+}

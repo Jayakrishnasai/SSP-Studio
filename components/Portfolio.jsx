@@ -1,70 +1,22 @@
 'use client'
-import { useState, useRef, useCallback, memo } from 'react'
+import { useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 
 const categories = ['All', 'Photography', 'Videography', 'Commercial', 'Wedding', 'Drone']
 
 const portfolioItems = [
-  { id: 1, category: 'Photography', title: 'Urban Elegance', aspect: 'aspect-[3/4]', image: '/images/urban_elegance.png' },
-  { id: 2, category: 'Videography', title: 'Ocean Dreams', aspect: 'aspect-[16/9]', image: '/images/ocean_dreams.png' },
-  { id: 3, category: 'Commercial', title: 'Brand Identity', aspect: 'aspect-[4/3]', image: '/images/brand_identity.png' },
-  { id: 4, category: 'Wedding', title: 'Eternal Vows', aspect: 'aspect-[3/4]', image: '/images/eternal_vows.png' },
-  { id: 5, category: 'Drone', title: 'Aerial Perspectives', aspect: 'aspect-[16/9]', image: '/images/aerial_perspectives.png' },
-  { id: 6, category: 'Photography', title: 'Golden Hour', aspect: 'aspect-[4/3]', image: '/images/golden_hour.png' },
-  { id: 7, category: 'Commercial', title: 'Product Vision', aspect: 'aspect-[3/4]', image: '/images/product_vision.png' },
-  { id: 8, category: 'Wedding', title: 'First Dance', aspect: 'aspect-[16/9]', image: '/images/first_dance.png' },
-  { id: 9, category: 'Videography', title: 'City Nights', aspect: 'aspect-[4/3]', image: '/images/city_nights.png' },
+  { id: 1, category: 'Photography', title: 'Urban Elegance', color: 'from-amber-900/60 to-amber-700/20', aspect: 'aspect-[3/4]', image: '/images/urban_elegance.png' },
+  { id: 2, category: 'Videography', title: 'Ocean Dreams', color: 'from-blue-900/60 to-blue-700/20', aspect: 'aspect-[16/9]', image: '/images/ocean_dreams.png' },
+  { id: 3, category: 'Commercial', title: 'Brand Identity', color: 'from-emerald-900/60 to-emerald-700/20', aspect: 'aspect-[4/3]', image: '/images/brand_identity.png' },
+  { id: 4, category: 'Wedding', title: 'Eternal Vows', color: 'from-rose-900/60 to-rose-700/20', aspect: 'aspect-[3/4]', image: '/images/eternal_vows.png' },
+  { id: 5, category: 'Drone', title: 'Aerial Perspectives', color: 'from-sky-900/60 to-sky-700/20', aspect: 'aspect-[16/9]', image: '/images/aerial_perspectives.png' },
+  { id: 6, category: 'Photography', title: 'Golden Hour', color: 'from-orange-900/60 to-orange-700/20', aspect: 'aspect-[4/3]', image: '/images/golden_hour.png' },
+  { id: 7, category: 'Commercial', title: 'Product Vision', color: 'from-violet-900/60 to-violet-700/20', aspect: 'aspect-[3/4]', image: '/images/product_vision.png' },
+  { id: 8, category: 'Wedding', title: 'First Dance', color: 'from-pink-900/60 to-pink-700/20', aspect: 'aspect-[16/9]', image: '/images/first_dance.png' },
+  { id: 9, category: 'Videography', title: 'City Nights', color: 'from-indigo-900/60 to-indigo-700/20', aspect: 'aspect-[4/3]', image: '/images/city_nights.png' },
 ]
 
-const CategoryButton = memo(function CategoryButton({ cat, isActive, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-6 py-2.5 rounded-full text-sm tracking-[0.1em] uppercase transition-all duration-300 ${
-        isActive
-          ? 'bg-ssp-accent text-ssp-darker font-semibold'
-          : 'glass text-ssp-gray-light hover:text-ssp-white hover:border-white/20'
-      }`}
-    >
-      {cat}
-    </button>
-  )
-})
-
-const PortfolioItem = memo(function PortfolioItem({ item }) {
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`${item.aspect} glass rounded-2xl overflow-hidden cursor-pointer group`}
-    >
-      <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-700">
-        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ssp-darker/90 via-ssp-darker/20 to-transparent" />
-
-        <div className="absolute bottom-0 left-0 p-6 z-10 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-          <h3 className="text-white font-semibold text-xl mb-1">{item.title}</h3>
-          <p className="text-ssp-accent text-sm font-medium tracking-wider uppercase">{item.category}</p>
-        </div>
-
-        <div className="absolute inset-0 bg-ssp-darker/0 group-hover:bg-ssp-darker/40 transition-all duration-500" />
-
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20">
-          <div className="w-14 h-14 rounded-full bg-ssp-accent/90 flex items-center justify-center transform group-hover:scale-100 scale-50 transition-transform duration-500 shadow-lg">
-            <svg className="w-6 h-6 text-ssp-darker" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-})
-
-const Portfolio = memo(function Portfolio() {
+export default function Portfolio() {
   const [filter, setFilter] = useState('All')
   const [selected, setSelected] = useState(null)
   const ref = useRef(null)
@@ -73,10 +25,6 @@ const Portfolio = memo(function Portfolio() {
   const filtered = filter === 'All'
     ? portfolioItems
     : portfolioItems.filter((item) => item.category === filter)
-
-  const handleFilter = useCallback((cat) => setFilter(cat), [])
-  const openModal = useCallback((item) => setSelected(item), [])
-  const closeModal = useCallback(() => setSelected(null), [])
 
   return (
     <section id="portfolio" className="relative py-32 lg:py-44">
@@ -105,21 +53,53 @@ const Portfolio = memo(function Portfolio() {
           className="flex flex-wrap justify-center gap-3 mb-12"
         >
           {categories.map((cat) => (
-            <CategoryButton
+            <button
               key={cat}
-              cat={cat}
-              isActive={filter === cat}
-              onClick={() => handleFilter(cat)}
-            />
+              onClick={() => setFilter(cat)}
+              className={`px-6 py-2.5 rounded-full text-sm tracking-[0.1em] uppercase transition-all duration-300 ${
+                filter === cat
+                  ? 'bg-ssp-accent text-ssp-darker font-semibold'
+                  : 'glass text-ssp-gray-light hover:text-ssp-white hover:border-white/20'
+              }`}
+            >
+              {cat}
+            </button>
           ))}
         </motion.div>
 
         <motion.div layout className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filtered.map((item) => (
-              <div key={item.id} onClick={() => openModal(item)}>
-                <PortfolioItem item={item} />
-              </div>
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className={`${item.aspect} glass rounded-2xl overflow-hidden cursor-pointer group`}
+                onClick={() => setSelected(item)}
+              >
+                <div className="w-full h-full relative group-hover:scale-105 transition-transform duration-700">
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                  <div className={`absolute inset-0 bg-gradient-to-t from-ssp-darker/90 via-ssp-darker/20 to-transparent`} />
+                  
+                  <div className="absolute bottom-0 left-0 p-6 z-10 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <h3 className="text-white font-semibold text-xl mb-1">{item.title}</h3>
+                    <p className="text-ssp-accent text-sm font-medium tracking-wider uppercase">{item.category}</p>
+                  </div>
+
+                  <div className="absolute inset-0 bg-ssp-darker/0 group-hover:bg-ssp-darker/40 transition-all duration-500" />
+
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20">
+                    <div className="w-14 h-14 rounded-full bg-ssp-accent/90 flex items-center justify-center transform group-hover:scale-100 scale-50 transition-transform duration-500 shadow-lg">
+                      <svg className="w-6 h-6 text-ssp-darker" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </AnimatePresence>
         </motion.div>
@@ -131,8 +111,8 @@ const Portfolio = memo(function Portfolio() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={closeModal}
-            className="fixed inset-0 z-[60] bg-ssp-darker/95 flex items-center justify-center p-4 cursor-pointer"
+            onClick={() => setSelected(null)}
+            className="fixed inset-0 z-[60] bg-ssp-darker/95 backdrop-blur-xl flex items-center justify-center p-4 cursor-pointer"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -140,7 +120,7 @@ const Portfolio = memo(function Portfolio() {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="max-w-4xl w-full relative"
+              className="max-w-4xl w-full"
             >
               <div className="aspect-video w-full rounded-2xl overflow-hidden relative">
                 <img src={selected.image} alt={selected.title} className="w-full h-full object-cover" />
@@ -151,7 +131,7 @@ const Portfolio = memo(function Portfolio() {
               </div>
 
               <button
-                onClick={closeModal}
+                onClick={() => setSelected(null)}
                 className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors"
               >
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,6 +144,4 @@ const Portfolio = memo(function Portfolio() {
       </AnimatePresence>
     </section>
   )
-})
-
-export default Portfolio
+}

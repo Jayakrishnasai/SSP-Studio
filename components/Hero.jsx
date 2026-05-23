@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, memo } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 
 const stagger = {
@@ -22,17 +22,7 @@ const fadeUp = {
   },
 }
 
-const scrollIndicator = {
-  animate: { y: [0, 8, 0] },
-  transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-}
-
-const dotAnimation = {
-  animate: { y: [0, 6, 0] },
-  transition: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-}
-
-const Hero = memo(function Hero() {
+export default function Hero() {
   const videoRef = useRef(null)
 
   useEffect(() => {
@@ -50,6 +40,7 @@ const Hero = memo(function Hero() {
           muted
           loop
           playsInline
+          poster="/images/hero-poster.jpg"
           className="w-full h-full object-cover scale-110"
         >
           <source
@@ -131,9 +122,9 @@ const Hero = memo(function Hero() {
             transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="hidden lg:block absolute right-6 lg:right-12 top-1/2 -translate-y-1/2 w-[350px] xl:w-[450px]"
           >
-            <img
-              src="/images/Image-1.png"
-              alt="Creative Showcase"
+            <img 
+              src="/images/Image-1.png" 
+              alt="Creative Showcase" 
               className="w-full h-auto rounded-2xl shadow-2xl shadow-black border border-ssp-white/10"
             />
           </motion.div>
@@ -146,7 +137,8 @@ const Hero = memo(function Hero() {
           className="absolute bottom-10 left-1/2 -translate-x-1/2"
         >
           <motion.div
-            {...scrollIndicator}
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             className="flex flex-col items-center gap-2 text-ssp-gray text-xs tracking-[0.2em] uppercase"
           >
             <span>Scroll</span>
@@ -155,7 +147,8 @@ const Hero = memo(function Hero() {
               <motion.circle
                 cx="8" cy="8" r="2"
                 fill="currentColor"
-                {...dotAnimation}
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               />
             </svg>
           </motion.div>
@@ -163,6 +156,4 @@ const Hero = memo(function Hero() {
       </div>
     </section>
   )
-})
-
-export default Hero
+}
