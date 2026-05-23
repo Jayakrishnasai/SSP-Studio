@@ -3,6 +3,34 @@ import React, { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'
 
+const copy = {
+  section1: {
+    eyebrow: 'Cinematic Experience',
+    headlineMain: 'Every Frame',
+    headlineAccent: 'Tells A Story',
+    body: 'Scroll to explore the visual journey.',
+  },
+  section2: {
+    eyebrow: 'Fluid Motion',
+    headlineMain: 'Unmatched',
+    headlineSecond: 'Smoothness',
+    body: 'Dynamic and precise transitions.',
+  },
+  section3: {
+    eyebrow: 'Visual Excellence',
+    headlineMain: 'Premium',
+    headlineSecond: 'Detail',
+    body: 'Pixel-perfect precision in every shot.',
+  },
+  section4: {
+    eyebrow: 'The Final Cut',
+    headlineMain: 'Your Vision,',
+    headlineAccent: 'Realized',
+    body: "Let's build something extraordinary together.",
+  },
+  loading: 'Loading Sequence...',
+}
+
 export default function CamFramesSequence() {
   const containerRef = useRef(null)
   const canvasRef = useRef(null)
@@ -13,50 +41,184 @@ export default function CamFramesSequence() {
 
     const canvas = canvasRef.current
     if (!canvas) return
-    const context = canvas.getContext('2d')
+    const context = canvas.getContext('2d', { alpha: false })
 
-    // Standard Full HD resolution for high quality rendering
-    canvas.width = 1920
-    canvas.height = 1080
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const isMobile = window.innerWidth < 768
 
     const frameCount = 279
-    const currentFrame = index => (
-      `/CamFrames/frame_${String(index).padStart(3, '0')}_delay-0.055s.png`
-    )
+    const frameFolder = window.innerWidth < 768
+      ? '/CamFramesWebP/mobile'
+      : window.innerWidth < 1200
+        ? '/CamFramesWebP/tablet'
+        : '/CamFramesWebP/desktop'
+    const preloadCount = isMobile ? 10 : 24
+    const preloadRadius = isMobile ? 14 : 30
+    const evictionPadding = preloadRadius * 2
+    const mobileFrameStep = isMobile ? 2 : 1
+    const timelineFrameCount = Math.ceil(frameCount / mobileFrameStep)
 
-    const images = []
+    const currentFrame = index => `${frameFolder}/frame_${String(index).padStart(3, '0')}.webp`
+    const fallbackFrame = index => `/CamFrames/frame_${String(index).padStart(3, '0')}_delay-0.055s.png`
+    const imagePromises = new Map()
+    const decodedImages = new Map()
     const frames = { frame: 0 }
-    
-    let imagesLoaded = 0
+    const renderState = {
+      rafId: null,
+      requestedFrame: 0,
+      renderedFrame: -1,
+      active: true,
+    }
+    let handleResize = null
+    let handleVisibilityChange = null
 
     let ctx = gsap.context(() => {
-      for (let i = 0; i < frameCount; i++) {
+      resizeCanvas()
+
+      function loadFrame(index, useFallback = false) {
+        const safeIndex = Math.max(0, Math.min(frameCount - 1, index))
+        const cacheKey = `${useFallback ? 'png' : 'webp'}-${safeIndex}`
+
+        if (imagePromises.has(cacheKey)) {
+          return imagePromises.get(cacheKey)
+        }
+
         const img = new Image()
-        img.src = currentFrame(i)
-        img.onload = () => {
-          imagesLoaded++
-          if (imagesLoaded === 1) {
-            render() // render the very first frame immediately
-          }
-          if (imagesLoaded === frameCount) {
-            setIsLoaded(true)
-          }
-        }
-        images.push(img)
+        img.decoding = 'async'
+        img.src = useFallback ? fallbackFrame(safeIndex) : currentFrame(safeIndex)
+
+        const promise = img.decode()
+          .then(() => {
+            decodedImages.set(safeIndex, img)
+            return img
+          })
+          .catch(() => {
+            imagePromises.delete(cacheKey)
+
+            if (!useFallback) {
+              return loadFrame(safeIndex, true)
+            }
+
+            return null
+          })
+
+        imagePromises.set(cacheKey, promise)
+        return promise
       }
 
-      function render() {
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        const img = images[frames.frame]
-        if (img && img.complete) {
-           const scale = Math.max(canvas.width / img.width, canvas.height / img.height)
-           const x = (canvas.width / 2) - (img.width / 2) * scale
-           const y = (canvas.height / 2) - (img.height / 2) * scale
-           context.drawImage(img, x, y, img.width * scale, img.height * scale)
+      function preloadInitialFrames() {
+        const requests = []
+
+        for (let i = 0; i < preloadCount; i++) {
+          requests.push(loadFrame(i * mobileFrameStep))
+        }
+
+        Promise.allSettled(requests).then(() => setIsLoaded(true))
+      }
+
+      function preloadAround(index) {
+        const start = Math.max(0, index - preloadRadius)
+        const end = Math.min(frameCount - 1, index + preloadRadius)
+
+        for (let i = start; i <= end; i += mobileFrameStep) {
+          loadFrame(i)
+        }
+
+        for (const cachedIndex of decodedImages.keys()) {
+          if (cachedIndex < start - evictionPadding || cachedIndex > end + evictionPadding) {
+            decodedImages.delete(cachedIndex)
+            imagePromises.delete(`webp-${cachedIndex}`)
+            imagePromises.delete(`png-${cachedIndex}`)
+          }
         }
       }
 
-      // Master timeline
+      function getResolvedFrame(rawFrame) {
+        return Math.min(frameCount - 1, Math.round(rawFrame) * mobileFrameStep)
+      }
+
+      function requestRender(index) {
+        renderState.requestedFrame = index
+
+        if (renderState.rafId) return
+
+        renderState.rafId = requestAnimationFrame(() => {
+          renderState.rafId = null
+
+          if (!renderState.active || renderState.renderedFrame === renderState.requestedFrame) {
+            return
+          }
+
+          renderFrame(renderState.requestedFrame)
+        })
+      }
+
+      function renderFrame(index) {
+        const img = decodedImages.get(index)
+
+        if (!img) {
+          loadFrame(index).then(loadedImage => {
+            if (loadedImage && renderState.active && renderState.requestedFrame === index) {
+              requestRender(index)
+            }
+          })
+          return
+        }
+
+        context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight)
+
+        const scale = Math.max(canvas.clientWidth / img.width, canvas.clientHeight / img.height)
+        const width = img.width * scale
+        const height = img.height * scale
+        const x = (canvas.clientWidth - width) / 2
+        const y = (canvas.clientHeight - height) / 2
+
+        context.drawImage(img, x, y, width, height)
+        renderState.renderedFrame = index
+      }
+
+      function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2)
+        const rect = canvas.getBoundingClientRect()
+        const width = Math.round(rect.width * dpr)
+        const height = Math.round(rect.height * dpr)
+
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width
+          canvas.height = height
+          context.setTransform(dpr, 0, 0, dpr, 0, 0)
+          requestRender(renderState.renderedFrame >= 0 ? renderState.renderedFrame : 0)
+        }
+      }
+
+      handleResize = function handleResize() {
+        resizeCanvas()
+        ScrollTrigger.refresh()
+      }
+
+      handleVisibilityChange = function handleVisibilityChange() {
+        renderState.active = !document.hidden
+
+        if (renderState.active) {
+          requestRender(renderState.requestedFrame)
+        }
+      }
+
+      window.addEventListener('resize', handleResize, { passive: true })
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+
+      loadFrame(0).then(img => {
+        if (img) {
+          setIsLoaded(true)
+          requestRender(0)
+          preloadInitialFrames()
+        }
+      })
+
+      if (prefersReducedMotion) {
+        return
+      }
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
@@ -70,10 +232,14 @@ export default function CamFramesSequence() {
 
       // Animate frame sequence
       tl.to(frames, {
-        frame: frameCount - 1,
+        frame: timelineFrameCount - 1,
         snap: "frame",
         ease: "none",
-        onUpdate: render,
+        onUpdate: () => {
+          const nextFrame = getResolvedFrame(frames.frame)
+          requestRender(nextFrame)
+          preloadAround(nextFrame)
+        },
         duration: 1
       }, 0)
 
@@ -94,7 +260,23 @@ export default function CamFramesSequence() {
 
     }, containerRef)
 
-    return () => ctx.revert()
+    return () => {
+      renderState.active = false
+
+      if (renderState.rafId) {
+        cancelAnimationFrame(renderState.rafId)
+      }
+
+      if (handleResize) {
+        window.removeEventListener('resize', handleResize)
+      }
+
+      if (handleVisibilityChange) {
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
+
+      ctx.revert()
+    }
   }, [])
 
   return (
@@ -111,52 +293,52 @@ export default function CamFramesSequence() {
           {/* SECTION 1 */}
           <div className="sec-1-text absolute text-center text-ssp-white px-6 w-full max-w-4xl">
             <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm md:text-base mb-4 md:mb-6 drop-shadow-md">
-              Cinematic Experience
+              {copy.section1.eyebrow}
             </p>
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-4 tracking-tight leading-[0.9] drop-shadow-2xl">
-              Every Frame<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-ssp-accent to-ssp-accent-light">Tells A Story</span>
+              {copy.section1.headlineMain}<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-ssp-accent to-ssp-accent-light">{copy.section1.headlineAccent}</span>
             </h1>
             <p className="text-lg md:text-2xl text-ssp-gray-light mt-6 max-w-2xl mx-auto drop-shadow-md">
-              Scroll to explore the visual journey.
+              {copy.section1.body}
             </p>
           </div>
           
           {/* SECTION 2 */}
           <div className="sec-2-text absolute text-center text-ssp-white px-6 opacity-0 w-full max-w-4xl">
             <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm md:text-base mb-4 md:mb-6 drop-shadow-md">
-              Fluid Motion
+              {copy.section2.eyebrow}
             </p>
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-4 tracking-tight leading-[0.9] drop-shadow-2xl">
-              Unmatched<br/>Smoothness
+              {copy.section2.headlineMain}<br/>{copy.section2.headlineSecond}
             </h1>
             <p className="text-lg md:text-2xl text-ssp-gray-light mt-6 max-w-2xl mx-auto drop-shadow-md">
-              Dynamic and precise transitions.
+              {copy.section2.body}
             </p>
           </div>
 
           {/* SECTION 3 */}
           <div className="sec-3-text absolute text-center text-ssp-white px-6 opacity-0 w-full max-w-4xl">
             <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm md:text-base mb-4 md:mb-6 drop-shadow-md">
-              Visual Excellence
+              {copy.section3.eyebrow}
             </p>
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-4 tracking-tight leading-[0.9] drop-shadow-2xl">
-              Premium<br/>Detail
+              {copy.section3.headlineMain}<br/>{copy.section3.headlineSecond}
             </h1>
             <p className="text-lg md:text-2xl text-ssp-gray-light mt-6 max-w-2xl mx-auto drop-shadow-md">
-              Pixel-perfect precision in every shot.
+              {copy.section3.body}
             </p>
           </div>
 
           {/* SECTION 4 */}
           <div className="sec-4-text absolute text-center text-ssp-white px-6 opacity-0 w-full max-w-4xl">
             <p className="text-ssp-accent tracking-[0.3em] uppercase text-sm md:text-base mb-4 md:mb-6 drop-shadow-md">
-              The Final Cut
+              {copy.section4.eyebrow}
             </p>
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-4 tracking-tight leading-[0.9] drop-shadow-2xl">
-              Your Vision,<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-ssp-accent to-ssp-accent-light">Realized</span>
+              {copy.section4.headlineMain}<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-ssp-accent to-ssp-accent-light">{copy.section4.headlineAccent}</span>
             </h1>
             <p className="text-lg md:text-2xl text-ssp-gray-light mt-6 max-w-2xl mx-auto drop-shadow-md">
-              Let's build something extraordinary together.
+              {copy.section4.body}
             </p>
           </div>
         </div>
@@ -165,7 +347,7 @@ export default function CamFramesSequence() {
         {!isLoaded && (
           <div className="absolute bottom-10 right-10 z-50 text-ssp-accent text-sm tracking-widest uppercase flex items-center gap-3">
              <div className="w-4 h-4 border-2 border-ssp-accent border-t-transparent rounded-full animate-spin" />
-             Loading Sequence...
+             {copy.loading}
           </div>
         )}
     </div>
