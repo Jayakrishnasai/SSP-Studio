@@ -53,7 +53,7 @@ export default function CamFramesSequence() {
         ? '/CamFramesWebP/tablet'
         : '/CamFramesWebP/desktop'
     const preloadCount = isMobile ? 10 : 24
-    const preloadRadius = isMobile ? 14 : 30
+    const preloadRadius = isMobile ? 20 : 45
     const evictionPadding = preloadRadius * 2
     const mobileFrameStep = isMobile ? 2 : 1
     const timelineFrameCount = Math.ceil(frameCount / mobileFrameStep)
@@ -75,7 +75,7 @@ export default function CamFramesSequence() {
     let ctx = gsap.context(() => {
       resizeCanvas()
 
-      function loadFrame(index, useFallback = false) {
+      function loadFrame(index, useFallback = false, fetchPriority = 'auto') {
         const safeIndex = Math.max(0, Math.min(frameCount - 1, index))
         const cacheKey = `${useFallback ? 'png' : 'webp'}-${safeIndex}`
 
@@ -85,6 +85,7 @@ export default function CamFramesSequence() {
 
         const img = new Image()
         img.decoding = 'async'
+        img.fetchPriority = fetchPriority
         img.src = useFallback ? fallbackFrame(safeIndex) : currentFrame(safeIndex)
 
         const promise = img.decode()
@@ -96,7 +97,7 @@ export default function CamFramesSequence() {
             imagePromises.delete(cacheKey)
 
             if (!useFallback) {
-              return loadFrame(safeIndex, true)
+              return loadFrame(safeIndex, true, fetchPriority)
             }
 
             return null
@@ -119,9 +120,21 @@ export default function CamFramesSequence() {
       function preloadAround(index) {
         const start = Math.max(0, index - preloadRadius)
         const end = Math.min(frameCount - 1, index + preloadRadius)
+        const direction = index >= renderState.renderedFrame ? 1 : -1
 
-        for (let i = start; i <= end; i += mobileFrameStep) {
-          loadFrame(i)
+        loadFrame(index, false, 'high')
+
+        for (let distance = mobileFrameStep; distance <= preloadRadius; distance += mobileFrameStep) {
+          const ahead = index + (distance * direction)
+          const behind = index - (distance * direction)
+
+          if (ahead >= start && ahead <= end) {
+            loadFrame(ahead, false, distance <= mobileFrameStep * 3 ? 'high' : 'auto')
+          }
+
+          if (behind >= start && behind <= end) {
+            loadFrame(behind)
+          }
         }
 
         for (const cachedIndex of decodedImages.keys()) {
@@ -157,7 +170,13 @@ export default function CamFramesSequence() {
         const img = decodedImages.get(index)
 
         if (!img) {
-          loadFrame(index).then(loadedImage => {
+          const nearestFrame = getNearestDecodedFrame(index)
+
+          if (nearestFrame !== null && nearestFrame !== renderState.renderedFrame) {
+            drawFrame(nearestFrame, decodedImages.get(nearestFrame))
+          }
+
+          loadFrame(index, false, 'high').then(loadedImage => {
             if (loadedImage && renderState.active && renderState.requestedFrame === index) {
               requestRender(index)
             }
@@ -165,6 +184,27 @@ export default function CamFramesSequence() {
           return
         }
 
+        drawFrame(index, img)
+      }
+
+      function getNearestDecodedFrame(index) {
+        let nearestFrame = null
+        let nearestDistance = Infinity
+        const maxDistance = preloadRadius + evictionPadding
+
+        for (const cachedIndex of decodedImages.keys()) {
+          const distance = Math.abs(cachedIndex - index)
+
+          if (distance < nearestDistance && distance <= maxDistance) {
+            nearestFrame = cachedIndex
+            nearestDistance = distance
+          }
+        }
+
+        return nearestFrame
+      }
+
+      function drawFrame(index, img) {
         context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight)
 
         const scale = Math.max(canvas.clientWidth / img.width, canvas.clientHeight / img.height)
